@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:user_preferences/src/shared_prefs/user_prefs.dart';
 import 'package:user_preferences/src/widgets/menu_widget.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -11,16 +12,27 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool _secondaryColor = false;
-  int _gender = 1;
+  bool? _secondaryColor;
+  int? _gender;
   String _name = 'Peter';
 
   TextEditingController? _txtController;
 
+  final prefs = new UserPrefs();
+
   @override
   void initState() {
     super.initState();
-    _txtController = new TextEditingController(text: _name);
+    prefs.lastPage = SettingsPage.routeName;
+    _gender = prefs.gender;
+    _secondaryColor = prefs.secondaryColor;
+    _txtController = new TextEditingController(text: prefs.userName);
+  }
+
+  _setSelectedRadio(int? value) {
+    prefs.gender = value;
+    _gender = value;
+    setState(() {});
   }
 
   @override
@@ -28,6 +40,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
         appBar: AppBar(
           title: Text('Settings'),
+          backgroundColor: (prefs.secondaryColor) ? Colors.teal : Colors.blue,
         ),
         drawer: MenuWidget(),
         body: ListView(
@@ -41,31 +54,25 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             Divider(),
             SwitchListTile(
-                value: _secondaryColor,
+                value: _secondaryColor as bool,
                 title: Text('Secondary Color'),
                 onChanged: (value) {
                   setState(() {
                     _secondaryColor = value;
+                    prefs.secondaryColor = value;
                   });
                 }),
             RadioListTile(
-                value: 1,
-                title: Text('Male'),
-                groupValue: _gender,
-                onChanged: (value) {
-                  setState(() {
-                    _gender = value as int;
-                  });
-                }),
+              value: 1,
+              title: Text('Male'),
+              groupValue: _gender,
+              onChanged: _setSelectedRadio,
+            ),
             RadioListTile(
                 value: 2,
                 title: Text('Female'),
                 groupValue: _gender,
-                onChanged: (value) {
-                  setState(() {
-                    _gender = value as int;
-                  });
-                }),
+                onChanged: _setSelectedRadio),
             Divider(),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 20.0),
@@ -73,7 +80,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 controller: _txtController,
                 decoration:
                     InputDecoration(labelText: 'Name', helperText: 'User Name'),
-                onChanged: (value) {},
+                onChanged: (value) {
+                  prefs.userName = value;
+                },
               ),
             )
           ],
